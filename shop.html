@@ -1,0 +1,327 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>متجرنا الإلكتروني</title>
+    
+</head>
+<body>
+
+    <header class="main-header">
+        <div class="logo">محلّي</div>
+        <nav class="nav-links">
+            <a href="#home-section">الرئيسية</a>
+            <a href="#products-section">المنتجات</a>
+            <a href="#about-section">من نحن</a>
+            <a href="#call-section">اتصل بنا</a>
+        </nav>
+        <div class="cart-icon">
+            🛒 <span class="cart-count">0</span>
+        </div>
+    </header>
+
+    <section class="hero" id="home-section"  class="home-section">
+        <div class="hero-content">
+            <h1>أهلاً بك في متجرنا</h1>
+            <p>اكتشف أفضل المنتجات بأعلى جودة وأنسب الأسعار</p>
+            <a href="#" class="btn-shop">تسوق الآن</a>
+        </div>
+    </section>
+
+    <main id="products-section" class="products-section">
+        
+        <h2>أحدث المنتجات</h2>
+        
+        <div class="products-grid">
+            <div class="product-card">
+                <div class="product-img">
+                    <img src="images/cheese.jpg"alt="جبن">
+                </div>
+                <div class="product-info">
+                    <h3>جبن</h3>
+                    <p class="price">25ج.م</p>
+                    <button class="btn-add-cart">إضافة للسلة</button>
+                </div>
+            </div>
+
+            <div class="product-card">
+                <div class="product-img">
+                    <img src="images/rice.jpg" alt="أرز مصري فاخر">
+                </div>
+                <div class="product-info">
+                    <h3>أرز مصري فاخر</h3>
+                    <p class="price">35ج.م</p>
+                    <button class="btn-add-cart">إضافة للسلة</button>
+                </div>
+            </div>
+
+            <div class="product-card">
+                <div class="product-img">
+                    <img src="images/biscuits.jpg" alt="بسكويت">
+                </div>
+                <div class="product-info">
+                    <h3>بسكويت</h3>
+                    <p class="price">5ج.م</p>
+                    <button class="btn-add-cart">إضافة للسلة</button>
+                </div>
+            </div>
+         
+            <div class="product-card">
+                <div class="product-img">
+                    <img src="images/milk.jpg" alt="حليب">
+                </div>
+                <div class="product-info">
+                    <h3>حليب</h3>
+                    <p class="price">25ج.م</p>
+                    <button class="btn-add-cart">إضافة للسلة</button>
+                </div>
+            </div>
+            <div class="product-card">
+                <div class="product-img">
+                    <img src="images/kitchen.jpg" alt="شعيرية">
+                </div>
+                <div class="product-info">
+                    <h3>شعيرية</h3>
+                    <p class="price">10ج.م</p>
+                    <button class="btn-add-cart">إضافة للسلة</button>
+                </div>
+            </div>
+            <div class="product-card">
+                <div class="product-img">
+                    <img src="images/sugar.jpg" alt="سكر">
+                </div>
+                <div class="product-info">
+                    <h3>سكر</h3>
+                    <p class="price">35ج.م</p>
+                    <button class="btn-add-cart">إضافة للسلة</button>
+                </div>
+            </div>
+            <div class="product-card">
+                <div class="product-img">
+                    <img src="images/yoghurt.jpg" alt="زبادي">
+                </div>
+                <div class="product-info">
+                    <h3>زبادي</h3>
+                    <p class="price">10ج.م</p>
+                    <button class="btn-add-cart">إضافة للسلة</button>
+                </div>
+            </div>
+            <div class="product-card">
+                <div class="product-img">
+                    <img src="images/ice cream.jpg" alt="كيمو كونو">
+                </div>
+                <div class="product-info">
+                    <h3>كيمو كونو</h3>
+                    <p class="price">10ج.م</p>
+                    <button class="btn-add-cart">إضافة للسلة</button>
+                </div>
+            </div>
+        </div>
+        <div id="call-section" class="call-section">
+            <p>01032601586</p>
+        
+        </div> 
+        <div class="about-section" id="about-section">
+            <p>مرحباً بكم في [عمر ماركت]. نحن هنا لنختصر عليكِ الوقت والجهد ونوفر لكِ ولعائلتكِ كل الاحتياجات اليومية والشهرية؛ من المنتجات الطازجة، الأجبان والمواد الغذائية، وحتى تشكيلة الحلويات والمخبوزات المفضلة لديكم.
+                جودة تضمنيها، وأسعار تناسبكِ، وخدمة تسعدكِ!</p>
+        </div>
+    </main>
+
+    <footer class="main-footer">
+        <p>متجر عمر حاتم 2026</p>
+    </footer>
+
+</body>
+</html>
+<style>
+   
+* {
+    scroll-behavior: smooth;
+    align-items: center;
+    margin: 0;
+    padding:0;
+    box-sizing: border-box;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+.body {
+    background-color: #f9f9f9;
+    color: rgb(24, 19, 19);
+}
+
+
+.main-header {
+    background-color: #ffffff;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 15px 5%;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+    position: sticky;
+    top: 0;
+    z-index: 100;
+}
+
+.logo {
+    font-size: 24px;
+    font-weight: bold;
+    color: #2c3e50;
+}
+
+.nav-links a {
+
+    
+    text-decoration: none;
+    justify-content: center;
+    gap:90px; 
+    color: #333;
+    font-size:16px;
+    font-size: 16px;
+    margin: 0 15px;
+    font-weight: bold;
+    transition: color 0.3s;
+}
+
+.nav-links a:hover {
+    color: #3498db;
+}
+
+.cart-icon {
+    font-size: 20px;
+    cursor: pointer;
+}
+
+.cart-count {
+    background-color: #e74c3c;
+    color: rgb(250, 246, 246);
+    padding: 2px 6px;
+    border-radius: 50%;
+    font-size: 12px;
+}
+
+
+.hero {
+    background-image: linear-gradient(rgba(0,0,0,0),rgba(0,0,0,0)),url('images/download\ \(1\).jpg');
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
+    height: 350px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    text-align: center;
+    color: white;
+}
+
+.hero-content h1 {
+    font-size: 36px;
+    margin-bottom: 10px;
+}
+
+.hero-content p {
+    font-size: 18px;
+    margin-bottom: 20px;
+}
+
+.btn-shop {
+    display: inline-block;
+    padding: 10px 25px;
+    background-color: #3498db;
+    color: white;
+    text-decoration: none;
+    border-radius: 5px;
+    transition: background 0.3s;
+}
+
+.btn-shop:hover {
+    background-color: #2980b9;
+}
+.products-section {
+    padding: 40px 5%;
+    text-align: center;
+}
+
+.products-section h2 {
+    margin-bottom: 30px;
+    color: #2c3e50;
+    position: relative;
+}
+
+
+.products-grid {
+    display: grid;
+    grid-template-columns: repeat(2,1fr);
+    gap:30px;
+    padding: 20px;
+    max-width: 1000px;
+    margin: 0 auto;
+}
+
+
+.product-card {
+    background-color: white;
+    border-radius: 8px;
+    overflow: hidden;
+    box-shadow: 0 3px 10px rgba(0,0,0,0.05);
+    transition: transform 0.3s;
+}
+
+.product-card:hover {
+    transform: translateY(-5px);
+}
+
+.product-img img {
+    width: 100%;
+    height: 400px;
+    object-fit: contain;
+}
+
+.product-info {
+    padding: 15px;
+}
+
+.product-info h3 {
+    font-size: 18px;
+    margin-bottom: 10px;
+    color: #333;
+}
+
+.product-info .price {
+    color: #27ae60;
+    font-weight: bold;
+    font-size: 16px;
+    margin-bottom: 15px;
+}
+
+.btn-add-cart {
+    width: 100%;
+    padding: 8px;
+    background-color: #2c3e50;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: background 0.3s;
+}
+
+.btn-add-cart:hover {
+    background-color: #34495e;
+}
+
+
+.main-footer {
+    background-color:rgba(88, 28, 28, 0.5);
+    color: white;
+    text-align: center;
+    padding: 20px;
+    margin-top: 40px;
+}
+.call-section {
+    
+    background: linear-gradient(rgba(243, 199, 3, 0.829), rgba(165, 89, 89, 0.5));
+    
+    color:#0e0d0d
+
+}
+</style

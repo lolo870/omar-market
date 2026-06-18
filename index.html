@@ -145,8 +145,8 @@
                 cartcount++;
                 
                 
-                if(carticon) {
-                    carticon.textContent = cartcount;
+                if(cartBadge) {
+                    cartBadge.textContent = cartcount;
                 }
                 
                 
@@ -155,8 +155,8 @@
         });
         
 
-        if(btnaddcard && productsSection) {
-            btnaddcard.addEventListener('click', (e) => {
+        if(shopNowBtn && productsSection) {
+            shopNowBtn.addEventListener('click', (e) => {
                 e.preventDefault();
                 productsSection.scrollIntoView({ behavior: 'smooth' });
             });
@@ -354,4 +354,4 @@
     color:#0e0d0d
 
 }
-</style
+</style>

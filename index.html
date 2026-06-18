@@ -213,11 +213,45 @@
     color:#0e0d0d
 
 }
+
+.cart-modal {
+    display: none; 
+    position: fixed;
+    z-index: 1000;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.5); 
+}
+
+
+.cart-modal-content {
+    background-color: #fff;
+    margin: 10% auto;
+    padding: 20px;
+    width: 80%;
+    max-width: 500px;
+    border-radius: 10px;
+    position: relative;
+    text-align: center;
+}
+
+
+.close-cart {
+    position: absolute;
+    top: 10px;
+    left: 15px;
+    font-size: 28px;
+    cursor: pointer;
+    color: #aaa;
+}
+.close-cart:hover { color: #000; }
 </style>  
 </head>
 <body>
 
-    <header class="main-header">
+    <header class="main-header" id="cart-button">
         <div class="logo">محلّي</div>
         <nav class="nav-links">
             <a href="#home-section">الرئيسية</a>
@@ -245,85 +279,100 @@
         <div class="products-grid">
             <div class="product-card">
                 <div class="product-img">
-                    <img src="cheese.jpg"alt="جبن">
+                    <img src="./images/cheese.jpg"alt="جبن">
                 </div>
                 <div class="product-info">
                     <h3>جبن</h3>
                     <p class="price">25ج.م</p>
-                    <button class="btn-add-cart">إضافة للسلة</button>
-                </div>
+                    <button class="btn-add-cart"
+                    data-name="جبن"
+                    data-price="25">اضافه للسلة</button>
+.                </div>
             </div>
 
             <div class="product-card">
                 <div class="product-img">
-                    <img src="rice.jpg" alt="أرز مصري فاخر">
+                    <img src="images/rice.jpg" alt="أرز مصري فاخر">
                 </div>
                 <div class="product-info">
                     <h3>أرز مصري فاخر</h3>
                     <p class="price">35ج.م</p>
-                    <button class="btn-add-cart">إضافة للسلة</button>
+                    <button class="btn-add-cart"
+                    data-name="أرز مصري فاخر"
+                    data-price="35">اضافه للسلة</button>
                 </div>
             </div>
 
             <div class="product-card">
                 <div class="product-img">
-                    <img src="biscuits.jpg" alt="بسكويت">
+                    <img src="./images/biscuits.jpg" alt="بسكويت">
                 </div>
                 <div class="product-info">
                     <h3>بسكويت</h3>
                     <p class="price">5ج.م</p>
-                    <button class="btn-add-cart">إضافة للسلة</button>
+                    <button class="btn-add-cart"
+                        data-name="بسكويت"
+                        data-price="5">اضافه للسلة </button>
                 </div>
             </div>
          
             <div class="product-card">
                 <div class="product-img">
-                    <img src="milk.jpg" alt="حليب">
+                    <img src="./images/milk.jpg" alt="حليب">
                 </div>
                 <div class="product-info">
                     <h3>حليب</h3>
                     <p class="price">25ج.م</p>
-                    <button class="btn-add-cart">إضافة للسلة</button>
+                    <button class="btn-add-cart"
+                    data-name="حليب"
+                    data-price="25">اضافه للسلة</button>
                 </div>
             </div>
             <div class="product-card">
                 <div class="product-img">
-                    <img src="kitchen.jpg" alt="شعيرية">
+                    <img src="./images/kitchen.jpg" alt="شعيرية">
                 </div>
                 <div class="product-info">
                     <h3>شعيرية</h3>
                     <p class="price">10ج.م</p>
-                    <button class="btn-add-cart">إضافة للسلة</button>
+                    <button class="btn-add-cart"data-name="شعيريه"
+                        data-price="10">اضافه للسلة</button>
                 </div>
             </div>
             <div class="product-card">
                 <div class="product-img">
-                    <img src="sugar.jpg" alt="سكر">
+                    <img src="./images/sugar.jpg" alt="سكر">
                 </div>
                 <div class="product-info">
                     <h3>سكر</h3>
                     <p class="price">35ج.م</p>
-                    <button class="btn-add-cart">إضافة للسلة</button>
+                    <button class="btn-add-cart"
+                    data-name="سكر"
+                        data-price="35">اضافه للسلة</button>
                 </div>
             </div>
             <div class="product-card">
                 <div class="product-img">
-                    <img src="yoghurt.jpg" alt="زبادي">
+                    <img src="./images/yoghurt.jpg" alt="زبادي">
                 </div>
                 <div class="product-info">
                     <h3>زبادي</h3>
                     <p class="price">10ج.م</p>
-                    <button class="btn-add-cart">إضافة للسلة</button>
+                    <button class="btn-add-cart"
+                    data-name="زبادي"
+                        data-price="10">اضافه للسلة</button>
                 </div>
             </div>
             <div class="product-card">
                 <div class="product-img">
-                    <img src="ice cream.jpg" alt="كيمو _كونو">
+                    <img src="./images/ice cream.jpg " alt="كيمو _كونو">
                 </div>
                 <div class="product-info">
                     <h3>كيمو كونو</h3>
                     <p class="price">10ج.م</p>
-                    <button class="btn-add-cart">إضافة للسلة</button>
+                    <button class="btn-add-cart"
+                    data-name="كيمو-كونو"
+                        data-price="10">اضافه للسلة</button>
                 </div>
             </div>
         </div>
@@ -336,40 +385,131 @@
                 جودة تضمنيها، وأسعار تناسبكِ، وخدمة تسعدكِ!</p>
         </div>
     </main>
-
     <footer class="main-footer">
         <p>متجر عمر حاتم 2026</p>
     </footer>
-<script>
-        
-        const cartBadge = document.querySelector('.cart-icon .cart-count');
-        const addToCartButtons = document.querySelectorAll('.btn-add-cart');
-        const shopNowBtn = document.querySelector('.hero .btn-shop');
-        const productsSection = document.querySelector('.products-grid'); 
-        
-        let cartcount= 0;
-        
-        addToCartButtons.forEach(button => {
-            button.addEventListener('click',()=>{
-                cartcount++;
-                
-                
-                if(cartBadge) {
-                    cartBadge.textContent = cartcount;
-                }
-                
-                
-                alert('تم إضافة المنتج إلى سلة التسوق بنجاح! 🛒');
-            });
-        });
-        
 
-        if(shopNowBtn && productsSection) {
-            shopNowBtn.addEventListener('click', (e) => {
-                e.preventDefault();
-                productsSection.scrollIntoView({ behavior: 'smooth' });
+    <div id="cart-modal" class="cart-modal">
+        <div class="cart-modal-content">
+            <span class="close-cart">&times;</span>
+            <h2>عربة التسوق الخاصة بك 🛒</h2>
+            <div class="cart-items-list">
+                <p id="empty-cart-msg">العربة فارغة حالياً.</p>
+            </div>
+            <hr>
+            <div class="cart-total">
+                <h3>الإجمالي: <span id="cart-total-price">0</span> ج.م</h3>
+            </div>
+            <button class="btn-checkout">تأكيد الطلب عبر الواتساب</button>
+        </div>
+    </div>
+    
+    <div class="cart-icon" id="cart-button" style="cursor: pointer;">
+        🛒 <span class="cart-count">0</span>
+    </div>
+    <div id="cart-modal" class="cart-modal">
+        <div class="cart-modal-content">
+            <span class="close-cart">&times;</span>
+            <h2>عربة التسوق الخاصة بك 🛒</h2>
+            <div class="cart-items-list">
+                <p id="empty-cart-msg">العربة فارغة حالياً.</p>
+            </div>
+            <hr>
+            <div class="cart-total">
+                <h3>الإجمالي: <span id="cart-total-price">0</span> ج.م</h3>
+            </div>
+            <button class="btn-checkout">تأكيد الطلب عبر الواتساب</button>
+        </div>
+    </div>
+<script>
+    
+    const cartBadge = document.querySelector('.cart-icon .cart-count');
+    const addToCartButtons = document.querySelectorAll('.btn-add-cart');
+    const shopNowBtn = document.querySelector('.hero .btn-shop');
+    const productsSection = document.querySelector('.products-section'); 
+    
+    const cartButton = document.getElementById('cart-button');
+    const cartModal = document.getElementById('cart-modal');
+    const closeCartBtn = document.querySelector('.close-cart');
+    const cartItemsList = document.querySelector('.cart-items-list');
+    const cartTotalPrice = document.getElementById('cart-total-price');
+    const emptyCartMsg = document.getElementById('empty-cart-msg');
+
+    let cartCount = 0;
+    let totalPrice = 0;
+    let cartItems = []; 
+
+    
+    addToCartButtons.forEach(button => {
+        button.addEventListener('click', () => {
+            const name = button.getAttribute('data-name');
+            const price = parseFloat(button.getAttribute('data-price'));
+
+            
+            cartCount++;
+            if(cartBadge) cartBadge.textContent = cartCount;
+
+            
+            cartItems.push({ name, price });
+            totalPrice += price;
+
+            
+            updateCartUI();
+
+            alert(`تم إضافة ${name} إلى سلة التسوق بنجاح! 🛒`);
+        });
+    });
+
+    
+    function updateCartUI() {
+        if (cartItems.length > 0) {
+            if(emptyCartMsg) emptyCartMsg.style.display = 'none'; // إخفاء كلمة العربة فارغة
+            
+            cartItemsList.innerHTML = ''; 
+
+            
+            cartItems.forEach(item => {
+                const itemDiv = document.createElement('div');
+                itemDiv.style.display = 'flex';
+                itemDiv.style.justifyContent = 'space-between';
+                itemDiv.style.margin = '10px 0';
+                itemDiv.innerHTML = `<span>${item.name}</span> <span>${item.price} ج.م</span>`;
+                cartItemsList.appendChild(itemDiv);
             });
         }
-        </script>
+
+    
+        if(cartTotalPrice) {
+            cartTotalPrice.textContent = totalPrice;
+        }
+    }
+
+    
+    if(shopNowBtn && productsSection) {
+        shopNowBtn.addEventListener('click', (e) => {
+            e.preventDefault();
+            productsSection.scrollIntoView({ behavior: 'smooth' });
+        });
+    }
+
+    
+    if(cartButton && cartModal && closeCartBtn) {
+        cartButton.addEventListener('click', () => {
+            cartModal.style.display = 'block';
+        });
+
+        closeCartBtn.addEventListener('click', () => {
+            cartModal.style.display = 'none';
+        });
+
+        window.addEventListener('click', (e) => {
+            if (e.target == cartModal) {
+                cartModal.style.display = 'none';
+            }
+        });
+    }
+</script>
+        
+        
 </body></html>
 

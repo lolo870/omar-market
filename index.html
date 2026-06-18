@@ -281,7 +281,7 @@
 
 .products-grid {
     display: grid;
-    grid-template-columns: repeat(2,1fr);
+    grid-template-columns: repeat(auto-fit,minmax(240px,1fr));
     gap:30px;
     padding: 20px;
     max-width: 1000px;
@@ -301,14 +301,27 @@
     transform: translateY(-5px);
 }
 
+
+.product-img {
+    width: 100%;
+    height: 220px; 
+    overflow: hidden;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    background-color: #fcfcfc; 
+}
+
 .product-img img {
     width: 100%;
-    height: 400px;
-    object-fit: contain;
+    height: 100%;
+    object-fit: contain; 
 }
 
 .product-info {
     padding: 15px;
+    position: relative;
+    Z-index: 10;
 }
 
 .product-info h3 {

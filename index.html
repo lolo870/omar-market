@@ -131,7 +131,37 @@
     <footer class="main-footer">
         <p>متجر عمر حاتم 2026</p>
     </footer>
+<script>
+        
+        const cartBadge = document.querySelector('.nav-icons .badge');
+        const addToCartButtons = document.querySelectorAll('.btn-add-cart');
+        const shopNowBtn = document.querySelector('.hero .btn');
+        const productsSection = document.querySelector('.products-grid'); 
+        
+        let cartCount = 0;
+        
+        addToCartButtons.forEach(button => {
+            button.addEventListener('click',()=>{
+                cartCount++;
+                
+                
+                if(cartBadge) {
+                    cartBadge.textContent = cartCount;
+                }
+                
+                
+                alert('تم إضافة المنتج إلى سلة التسوق بنجاح! 🛒');
+            });
+        });
+        
 
+        if(shopNowBtn && productsSection) {
+            shopNowBtn.addEventListener('click', (e) => {
+                e.preventDefault();
+                productsSection.scrollIntoView({ behavior: 'smooth' });
+            });
+        }
+        </script>
 </body>
 </html>
 <style>

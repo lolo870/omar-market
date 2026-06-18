@@ -138,15 +138,15 @@
         const shopNowBtn = document.querySelector('.hero .btn');
         const productsSection = document.querySelector('.products-grid'); 
         
-        let productcard = 0;
+        let cartcount= 0;
         
         addToCartButtons.forEach(button => {
             button.addEventListener('click',()=>{
-                productcard++;
+                cartcount++;
                 
                 
                 if(cartBadge) {
-                    cartBadge.textContent = productcount;
+                    cartBadge.textContent = cartcount;
                 }
                 
                 

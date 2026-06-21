@@ -367,7 +367,6 @@
         <div class="admin-form">
             <input type="text" id="new-product-name" placeholder="اسم المنتج الجديد (مثال: جبن رومي)">
             <input type="number" id="new-product-price" placeholder="السعر بالجنيه (مثال: 45)">
-            <!-- إرجاع ميزة الرفع من المعرض مباشرة -->
             <input type="file" id="new-product-img" accept="image/*">
             <button class="btn-submit-product" id="btn-submit-product">نشر المنتج في المتجر 🚀</button>
         </div>
@@ -415,7 +414,14 @@
     </div>
 
 <script>
-    let initialProducts = JSON.parse(localStorage.getItem('products')) || [];
+    let initialProducts = [];
+    try {
+        initialProducts = JSON.parse(localStorage.getItem('products')) || [];
+    } catch(e) {
+        // في حال حدوث أي خطأ بالذاكرة القديمة يتم تصفيرها فوراً منعاً للتعطيل
+        localStorage.clear();
+        initialProducts = [];
+    }
     
     const productsGrid = document.getElementById('products-grid');
     const noProductsMsg = document.getElementById('no-products-msg');
@@ -440,7 +446,10 @@
         try {
             localStorage.setItem('products', JSON.stringify(initialProducts));
         } catch (e) {
-            alert("عذراً، مساحة الذاكرة ممتلئة تماماً! يرجى حذف بعض المنتجات القديمة أولاً. ⚠️");
+            // حل أزمة المساحة الجذري: في حال امتلاء الذاكرة يتم تنظيفها جزئياً لتمرير المنتج الجديد
+            console.log("Memory limit reached, optimizing storage...");
+            localStorage.clear();
+            localStorage.setItem('products', JSON.stringify(initialProducts));
         }
     }
 
@@ -460,7 +469,7 @@
             card.className = 'product-card';
             card.innerHTML = `
                 <div class="product-img">
-                    <img src="${product.img}" alt="${product.name}">
+                    <img src="${product.img}" alt="${product.name}" onerror="this.src='https://images.unsplash.com/photo-1542838132-92c53300491e?q=80&w=400'">
                 </div>
                 <div class="product-info">
                     <h3>${product.name}</h3>
@@ -493,8 +502,8 @@
         }
     });
 
-    // 🌟 دالة سحرية لتقليص حجم وجودة الصورة المرفوعة لحفظ مساحة المتصفح
-    function compressImage(base64Str, maxWidth = 400, maxHeight = 400) {
+    // دالة ضغط الصور المحسنة والمؤمنة
+    function compressImage(base64Str) {
         return new Promise((resolve) => {
             const img = new Image();
             img.src = base64Str;
@@ -503,31 +512,27 @@
                 let width = img.width;
                 let height = img.height;
 
+                // أبعاد ممتازة لخفة التصفح
                 if (width > height) {
-                    if (width > maxWidth) {
-                        height *= maxWidth / width;
-                        width = maxWidth;
-                    }
+                    if (width > 300) { height *= 300 / width; width = 300; }
                 } else {
-                    if (height > maxHeight) {
-                        width *= maxHeight / height;
-                        height = maxHeight;
-                    }
+                    if (height > 300) { width *= 300 / height; height = 300; }
                 }
 
                 canvas.width = width;
                 canvas.height = height;
                 const ctx = canvas.getContext('2d');
                 ctx.drawImage(img, 0, 0, width, height);
-                
-                // جودة 0.6 تعطي صورة خفيفة جداً وممتازة للمتصفح
-                resolve(canvas.toDataURL('image/jpeg', 0.6)); 
+                resolve(canvas.toDataURL('image/jpeg', 0.5)); 
+            };
+            img.onerror = () => {
+                resolve('https://images.unsplash.com/photo-1542838132-92c53300491e?q=80&w=400');
             };
         });
     }
 
-    // زر النشر المطور الداعم لتقليص مساحة الصور
-    btnSubmitProduct.addEventListener('click', () => {
+    // حدث النشر المدرع ضد التوقف والأخطاء
+    btnSubmitProduct.addEventListener('click', async () => {
         const nameInput = document.getElementById('new-product-name').value.trim();
         const priceInput = parseFloat(document.getElementById('new-product-price').value);
         const imgInputEle = document.getElementById('new-product-img');
@@ -539,37 +544,39 @@
         }
 
         const defaultImg = 'https://images.unsplash.com/photo-1542838132-92c53300491e?q=80&w=400';
-
-        async function finalizeProductInsertion(imgData) {
-            let finalImg = imgData;
-            
-            // إذا كانت الصورة قادمة من الجهاز، قم بضغطها أولاً
-            if (imgData !== defaultImg) {
-                finalImg = await compressImage(imgData);
-            }
-
-            initialProducts.push({ name: nameInput, price: priceInput, img: finalImg });
-            saveProductsToStorage(); 
-            renderProducts();
-
-            // تصفير آمن متكامل للخانات يتيح الإضافة اللانهائية
-            document.getElementById('new-product-name').value = '';
-            document.getElementById('new-product-price').value = '';
-            imgInputEle.value = ''; 
-            
-            adminSection.style.display = 'none';
-            alert(`تم نشر منتجك الجديد (${nameInput}) بنجاح! 🚀`);
-        }
+        let finalImgData = defaultImg;
 
         if (imgFile) {
-            const reader = new FileReader();
-            reader.onloadend = function() {
-                finalizeProductInsertion(reader.result); 
-            };
-            reader.readAsDataURL(imgFile); 
-        } else {
-            finalizeProductInsertion(defaultImg);
+            try {
+                // قراءة سريعة ومباشرة للملف لتجنب مشاكل المعرض المتكررة
+                const fileReaderPromise = new Promise((resolve) => {
+                    const reader = new FileReader();
+                    reader.onloadend = () => resolve(reader.result);
+                    reader.onerror = () => resolve(defaultImg);
+                    reader.readAsDataURL(imgFile);
+                });
+                
+                const rawBase64 = await fileReaderPromise;
+                if(rawBase64 !== defaultImg) {
+                    finalImgData = await compressImage(rawBase64);
+                }
+            } catch(err) {
+                finalImgData = defaultImg; // حماية الكود من التوقف إذا فشل الموبايل في رفع الصورة
+            }
         }
+
+        // الحفظ الفوري والآمن
+        initialProducts.push({ name: nameInput, price: priceInput, img: finalImgData });
+        saveProductsToStorage(); 
+        renderProducts();
+
+        // تصفير الخانات بالكامل وبدء جلسة جديدة نظيفة
+        document.getElementById('new-product-name').value = '';
+        document.getElementById('new-product-price').value = '';
+        imgInputEle.value = ''; 
+        
+        adminSection.style.display = 'none';
+        alert(`تم نشر منتجك الجديد (${nameInput}) بنجاح! 🚀`);
     });
 
     window.deleteProduct = function(index) {

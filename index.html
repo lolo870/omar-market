@@ -282,6 +282,7 @@
             margin: 20px 0;
             border-radius: 5px;
             font-weight: bold;
+            text-align: center;
         }
 
         .about-section {
@@ -413,9 +414,10 @@
     </div>
 
 <script>
-    
+    // جلب البيانات من الذاكرة المحلية أو البدء بمصفوفة فارغة
     let initialProducts = JSON.parse(localStorage.getItem('products')) || [];
     
+    // ربط عناصر واجهة المستخدم بالـ JavaScript
     const productsGrid = document.getElementById('products-grid');
     const noProductsMsg = document.getElementById('no-products-msg');
     const btnToggleAdmin = document.getElementById('btn-toggle-admin');
@@ -435,10 +437,12 @@
     let totalPrice = 0;
     let cartItems = []; 
 
-    
+    // دالة حفظ المنتجات في الـ LocalStorage
     function saveProductsToStorage() {
         localStorage.setItem('products', JSON.stringify(initialProducts));
     }
+
+    // دالة عرض المنتجات على الشاشة
     function renderProducts() {
         if (initialProducts.length === 0) {
             if(noProductsMsg) noProductsMsg.style.display = 'block';
@@ -473,7 +477,7 @@
         activateCartButtons();
     }
 
-    
+    // فتح وإغلاق لوحة التحكم بكلمة المرور
     btnToggleAdmin.addEventListener('click', () => {
         const password = prompt("برجاء إدخال كلمة مرور المالك لفتح لوحة التحكم: 🔐");
         if (password === '1234') { 
@@ -489,11 +493,12 @@
         }
     });
 
-    
+    // إضافة منتج جديد ونشره (تم حل مشكلة التوقف هنا)
     btnSubmitProduct.addEventListener('click', () => {
         const nameInput = document.getElementById('new-product-name').value.trim();
         const priceInput = parseFloat(document.getElementById('new-product-price').value);
-        const imgFile = document.getElementById('new-product-img').files[0];
+        const imgInputEle = document.getElementById('new-product-img');
+        const imgFile = imgInputEle.files[0];
 
         if(nameInput === '' || isNaN(priceInput)) {
             alert('الرجاء إدخال اسم منتج وسعر صحيحين! ⚠️');
@@ -502,39 +507,40 @@
 
         const defaultImg = 'https://images.unsplash.com/photo-1542838132-92c53300491e?q=80&w=400';
 
-        function addAndSaveProduct(imgData) {
+        function finalizeProductInsertion(imgData) {
+            // إضافة المنتج للمصفوفة
             initialProducts.push({ name: nameInput, price: priceInput, img: imgData });
             saveProductsToStorage(); 
             renderProducts();
 
-        
+            // تصفير الحقول بشكل آمن تماماً يتيح الإضافة المتكررة
             document.getElementById('new-product-name').value = '';
             document.getElementById('new-product-price').value = '';
-            document.getElementById('new-product-img').value = ''; 
-            adminSection.style.display = 'none';
+            imgInputEle.value = ''; // تصفير حقل الصورة من المتصفح
             
+            adminSection.style.display = 'none';
             alert(`تم نشر منتجك الجديد (${nameInput}) بنجاح! 🚀`);
         }
 
         if (imgFile) {
             const reader = new FileReader();
             reader.onloadend = function() {
-                addAndSaveProduct(reader.result); 
+                finalizeProductInsertion(reader.result); 
             };
             reader.readAsDataURL(imgFile); 
         } else {
-            addAndSaveProduct(defaultImg);
+            finalizeProductInsertion(defaultImg);
         }
     });
 
-    
+    // دالة مسح المنتج
     window.deleteProduct = function(index) {
         const password = prompt("برجاء إدخال كلمة مرور المالك لإتمام الحذف: 🔐");
         if (password === '1234') { 
             const confirmDelete = confirm(`هل أنت متأكد من حذف منتج (${initialProducts[index].name})؟ ⚠️`);
             if (confirmDelete) {
                 initialProducts.splice(index, 1); 
-                saveProductsToStorage();
+                saveProductsToStorage(); 
                 renderProducts(); 
                 alert("تم حذف المنتج بنجاح! 🗑️");
             }
@@ -542,6 +548,8 @@
             alert("كلمة مرور خاطئة! لا يمكنك حذف هذا المنتج. ❌");
         }
     }
+
+    // دالة تعديل المنتج
     window.editProduct = function(index) {
         const password = prompt("برجاء إدخال كلمة مرور المالك لإتمام التعديل: 🔐");
         if (password === '1234') {
@@ -561,7 +569,7 @@
 
             initialProducts[index].name = newName.trim();
             initialProducts[index].price = newPrice;
-            saveProductsToStorage(); // تحديث المتصفح بعد التعديل
+            saveProductsToStorage(); 
             renderProducts();
             alert("تم تعديل بيانات المنتج بنجاح! ✨");
         } else if (password !== null) {
@@ -569,16 +577,16 @@
         }
     }
 
-    
+    // تفعيل أزرار السلة لكل المنتجات الموجودة والجديدة
     function activateCartButtons() {
         document.querySelectorAll('.btn-add-cart').forEach(button => {
-            button.replaceWith(button.cloneNode(true)); 
-        });
+            // إزالة الأحداث القديمة لتجنب التكرار والتهنيج
+            const newBtn = button.cloneNode(true);
+            button.parentNode.replaceChild(newBtn, button);
 
-        document.querySelectorAll('.btn-add-cart').forEach(button => {
-            button.addEventListener('click', () => {
-                const name = button.getAttribute('data-name');
-                const price = parseFloat(button.getAttribute('data-price'));
+            newBtn.addEventListener('click', () => {
+                const name = newBtn.getAttribute('data-name');
+                const price = parseFloat(newBtn.getAttribute('data-price'));
 
                 cartCount++;
                 if(countSpan) countSpan.textContent = cartCount;
@@ -592,7 +600,7 @@
         });
     }
 
-    
+    // تحديث واجهة السلة
     function updateCartUI() {
         if (cartItems.length > 0) {
             if(emptyCartMsg) emptyCartMsg.style.display = 'none'; 
@@ -616,7 +624,7 @@
         }
     }
 
-    
+    // أحداث التنقل البرمجي وفتح الـ Modal
     if(shopNowBtn && productsSection) {
         shopNowBtn.addEventListener('click', (e) => {
             e.preventDefault();
@@ -640,7 +648,7 @@
         });
     }
 
-    
+    // تشغيل العرض الأول عند تحميل الصفحة
     renderProducts();
 </script>
 </body>

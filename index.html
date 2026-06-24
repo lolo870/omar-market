@@ -282,7 +282,6 @@
             margin: 20px 0;
             border-radius: 5px;
             font-weight: bold;
-            text-align: center;
         }
 
         .about-section {
@@ -412,283 +411,303 @@
             <button class="btn-checkout">تأكيد الطلب عبر الواتساب</button>
         </div>
     </div>
-
-<script>
-    let initialProducts = [];
-    try {
-        initialProducts = JSON.parse(localStorage.getItem('products')) || [];
-    } catch(e) {
-        // في حال حدوث أي خطأ بالذاكرة القديمة يتم تصفيرها فوراً منعاً للتعطيل
-        localStorage.clear();
-        initialProducts = [];
-    }
+   
     
-    const productsGrid = document.getElementById('products-grid');
-    const noProductsMsg = document.getElementById('no-products-msg');
-    const btnToggleAdmin = document.getElementById('btn-toggle-admin');
-    const adminSection = document.getElementById('admin-section');
-    const btnSubmitProduct = document.getElementById('btn-submit-product');
-    const shopNowBtn = document.querySelector('.btn-shop');
-    const productsSection = document.getElementById('products-section');
-    const cartButton = document.getElementById('cart-button');
-    const cartModal = document.getElementById('cart-modal');
-    const closeCartBtn = document.querySelector('.close-cart');
-    const cartItemsList = document.querySelector('.cart-items-list');
-    const cartTotalPrice = document.getElementById('cart-total-price');
-    const emptyCartMsg = document.getElementById('empty-cart-msg');
-    const countSpan = document.querySelector('.cart-count');
-
-    let cartCount = 0;
-    let totalPrice = 0;
-    let cartItems = []; 
-
-    function saveProductsToStorage() {
-        try {
-            localStorage.setItem('products', JSON.stringify(initialProducts));
-        } catch (e) {
-            // حل أزمة المساحة الجذري: في حال امتلاء الذاكرة يتم تنظيفها جزئياً لتمرير المنتج الجديد
-            console.log("Memory limit reached, optimizing storage...");
-            localStorage.clear();
-            localStorage.setItem('products', JSON.stringify(initialProducts));
-        }
-    }
-
-    function renderProducts() {
-        if (initialProducts.length === 0) {
-            if(noProductsMsg) noProductsMsg.style.display = 'block';
-            productsGrid.innerHTML = '';
-            return;
-        } else {
-            if(noProductsMsg) noProductsMsg.style.display = 'none';
-        }
-
-        productsGrid.innerHTML = ''; 
+    <script type="module">
+        // 1. استدعاء مكتبات جوجل لـ Firestore من الإنترنت مباشرة
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/12.15.0/firebase-app.js";
+        import { getFirestore, collection, doc, setDoc, getDocs, deleteDoc } from "https://www.gstatic.com/firebasejs/12.15.0/firebase-firestore.js";
+    
+        // 2. بيانات مشروعكِ الحالي على Firestore (OMAR AND MODY MARKET)
+        const firebaseConfig = {
+          apiKey: "AIzaSyC41vAfQm_6m_vrYAPpBU_7nd8fw8UqmPg",
+          authDomain: "omar-and-mody-market.firebaseapp.com",
+          projectId: "omar-and-mody-market",
+          storageBucket: "omar-and-mody-market.firebasestorage.app",
+          messagingSenderId: "302404101204",
+          appId: "1:302404101204:web:2c3cf9d18a5ee93360b9c1",
+          measurementId: "G-745QC750FL"
+        };
+      
+        // 3. تهيئة وتوصيل الموقع بـ Firestore
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
         
-        initialProducts.forEach((product, index) => {
-            const card = document.createElement('div');
-            card.className = 'product-card';
-            card.innerHTML = `
-                <div class="product-img">
-                    <img src="${product.img}" alt="${product.name}" onerror="this.src='https://images.unsplash.com/photo-1542838132-92c53300491e?q=80&w=400'">
-                </div>
-                <div class="product-info">
-                    <h3>${product.name}</h3>
-                    <p class="price">${product.price} ج.م</p>
-                    <button class="btn-add-cart" data-name="${product.name}" data-price="${product.price}">اضافه للسلة</button>
-                    <div class="product-actions">
-                        <button class="btn-edit-product" onclick="editProduct(${index})">📝 تعديل</button>
-                        <button class="btn-delete-product" onclick="deleteProduct(${index})">🗑️ مسح</button>
-                    </div>
-                </div>
-            `;
-            productsGrid.appendChild(card);
-        });
+        let initialProducts = [];
         
-        activateCartButtons();
-    }
-
-    btnToggleAdmin.addEventListener('click', () => {
-        const password = prompt("برجاء إدخال كلمة مرور المالك لفتح لوحة التحكم: 🔐");
-        if (password === '1234') { 
-            let currentDisplay = window.getComputedStyle(adminSection).display;
-            if (currentDisplay === 'none') {
-                adminSection.style.display = 'block';
-                adminSection.scrollIntoView({ behavior: 'smooth' });
-            } else {
-                adminSection.style.display = 'none';
-            }
-        } else if (password !== null) {
-            alert("عذراً، كلمة المرور خاطئة! هذه الخاصية للمالك فقط. ❌");
-        }
-    });
-
-    // دالة ضغط الصور المحسنة والمؤمنة
-    function compressImage(base64Str) {
-        return new Promise((resolve) => {
-            const img = new Image();
-            img.src = base64Str;
-            img.onload = () => {
-                const canvas = document.createElement('canvas');
-                let width = img.width;
-                let height = img.height;
-
-                // أبعاد ممتازة لخفة التصفح
-                if (width > height) {
-                    if (width > 300) { height *= 300 / width; width = 300; }
-                } else {
-                    if (height > 300) { width *= 300 / height; height = 300; }
-                }
-
-                canvas.width = width;
-                canvas.height = height;
-                const ctx = canvas.getContext('2d');
-                ctx.drawImage(img, 0, 0, width, height);
-                resolve(canvas.toDataURL('image/jpeg', 0.5)); 
-            };
-            img.onerror = () => {
-                resolve('https://images.unsplash.com/photo-1542838132-92c53300491e?q=80&w=400');
-            };
-        });
-    }
-
-    // حدث النشر المدرع ضد التوقف والأخطاء
-    btnSubmitProduct.addEventListener('click', async () => {
-        const nameInput = document.getElementById('new-product-name').value.trim();
-        const priceInput = parseFloat(document.getElementById('new-product-price').value);
-        const imgInputEle = document.getElementById('new-product-img');
-        const imgFile = imgInputEle.files[0];
-
-        if(nameInput === '' || isNaN(priceInput)) {
-            alert('الرجاء إدخال اسم منتج وسعر صحيحين! ⚠️');
-            return;
-        }
-
-        const defaultImg = 'https://images.unsplash.com/photo-1542838132-92c53300491e?q=80&w=400';
-        let finalImgData = defaultImg;
-
-        if (imgFile) {
+        // ربط عناصر واجهة المستخدم (الـ HTML)
+        const productsGrid = document.getElementById('products-grid');
+        const noProductsMsg = document.getElementById('no-products-msg');
+        const btnToggleAdmin = document.getElementById('btn-toggle-admin');
+        const adminSection = document.getElementById('admin-section');
+        const btnSubmitProduct = document.getElementById('btn-submit-product');
+        const shopNowBtn = document.querySelector('.btn-shop');
+        const productsSection = document.getElementById('products-section');
+        const cartButton = document.getElementById('cart-button');
+        const cartModal = document.getElementById('cart-modal');
+        const closeCartBtn = document.querySelector('.close-cart');
+        const cartItemsList = document.querySelector('.cart-items-list');
+        const cartTotalPrice = document.getElementById('cart-total-price');
+        const emptyCartMsg = document.getElementById('empty-cart-msg');
+        const countSpan = document.querySelector('.cart-count');
+    
+        let cartCount = 0;
+        let totalPrice = 0;
+        let cartItems = []; 
+    
+        // دالة جلب البيانات من الـ Firestore تلقائياً أول ما الموقع يفتح
+        async function loadProductsFromFirestore() {
             try {
-                // قراءة سريعة ومباشرة للملف لتجنب مشاكل المعرض المتكررة
-                const fileReaderPromise = new Promise((resolve) => {
-                    const reader = new FileReader();
-                    reader.onloadend = () => resolve(reader.result);
-                    reader.onerror = () => resolve(defaultImg);
-                    reader.readAsDataURL(imgFile);
+                const querySnapshot = await getDocs(collection(db, 'products'));
+                initialProducts = [];
+                querySnapshot.forEach((doc) => {
+                    // بنجيب البيانات وبنحفظ معاها الـ id بتاع المستند عشان المسح والتعديل
+                    initialProducts.push({ id: doc.id, ...doc.data() });
                 });
-                
-                const rawBase64 = await fileReaderPromise;
-                if(rawBase64 !== defaultImg) {
-                    finalImgData = await compressImage(rawBase64);
-                }
-            } catch(err) {
-                finalImgData = defaultImg; // حماية الكود من التوقف إذا فشل الموبايل في رفع الصورة
+                renderProducts();
+            } catch (error) {
+                console.error("خطأ في جلب المنتجات: ", error);
             }
         }
-
-        // الحفظ الفوري والآمن
-        initialProducts.push({ name: nameInput, price: priceInput, img: finalImgData });
-        saveProductsToStorage(); 
-        renderProducts();
-
-        // تصفير الخانات بالكامل وبدء جلسة جديدة نظيفة
-        document.getElementById('new-product-name').value = '';
-        document.getElementById('new-product-price').value = '';
-        imgInputEle.value = ''; 
-        
-        adminSection.style.display = 'none';
-        alert(`تم نشر منتجك الجديد (${nameInput}) بنجاح! 🚀`);
-    });
-
-    window.deleteProduct = function(index) {
-        const password = prompt("برجاء إدخال كلمة مرور المالك لإتمام الحذف: 🔐");
-        if (password === '1234') { 
-            const confirmDelete = confirm(`هل أنت متأكد من حذف منتج (${initialProducts[index].name})؟ ⚠️`);
-            if (confirmDelete) {
-                initialProducts.splice(index, 1); 
-                saveProductsToStorage(); 
-                renderProducts(); 
-                alert("تم حذف المنتج بنجاح! 🗑️");
-            }
-        } else if (password !== null) {
-            alert("كلمة مرور خاطئة! لا يمكنك حذف هذا المنتج. ❌");
-        }
-    }
-
-    window.editProduct = function(index) {
-        const password = prompt("برجاء إدخال كلمة مرور المالك لإتمام التعديل: 🔐");
-        if (password === '1234') {
-            const currentProduct = initialProducts[index];
+    
+        function renderProducts() {
+            if (!productsGrid) return;
             
-            const newName = prompt("تعديل اسم المنتج:", currentProduct.name);
-            if (newName === null || newName.trim() === "") return;
-
-            const newPriceInput = prompt("تعديل سعر المنتج (بالأرقام):", currentProduct.price);
-            if (newPriceInput === null) return;
-            const newPrice = parseFloat(newPriceInput);
-
-            if (isNaN(newPrice)) {
-                alert("الرجاء إدخال سعر صحيح! ⚠️");
+            if (initialProducts.length === 0) {
+                if(noProductsMsg) noProductsMsg.style.display = 'block';
+                productsGrid.innerHTML = '';
                 return;
+            } else {
+                if(noProductsMsg) noProductsMsg.style.display = 'none';
             }
-
-            initialProducts[index].name = newName.trim();
-            initialProducts[index].price = newPrice;
-            saveProductsToStorage(); 
-            renderProducts();
-            alert("تم تعديل بيانات المنتج بنجاح! ✨");
-        } else if (password !== null) {
-            alert("كلمة مرور خاطئة! لا يمكنك تعديل هذا المنتج. ❌");
-        }
-    }
-
-    function activateCartButtons() {
-        document.querySelectorAll('.btn-add-cart').forEach(button => {
-            const newBtn = button.cloneNode(true);
-            button.parentNode.replaceChild(newBtn, button);
-
-            newBtn.addEventListener('click', () => {
-                const name = newBtn.getAttribute('data-name');
-                const price = parseFloat(newBtn.getAttribute('data-price'));
-
-                cartCount++;
-                if(countSpan) countSpan.textContent = cartCount;
-
-                cartItems.push({ name, price });
-                totalPrice += price;
-
-                updateCartUI();
-                alert(`تم إضافة ${name} إلى سلة التسوق بنجاح! 🛒`);
+    
+            productsGrid.innerHTML = ''; 
+            
+            initialProducts.forEach((product, index) => {
+                const card = document.createElement('div');
+                card.className = 'product-card';
+                card.innerHTML = `
+                    <div class="product-img">
+                        <img src="${product.img}" alt="${product.name}" onerror="this.src='https://images.unsplash.com/photo-1542838132-92c53300491e?q=80&w=400'">
+                    </div>
+                    <div class="product-info">
+                        <h3>${product.name}</h3>
+                        <p class="price">${product.price} ج.م</p>
+                        <button class="btn-add-cart" data-name="${product.name}" data-price="${product.price}">اضافه للسلة</button>
+                        <div class="product-actions">
+                            <button class="btn-edit-product" data-index="${index}">📝 تعديل</button>
+                            <button class="btn-delete-product" data-index="${index}">🗑️ مسح</button>
+                        </div>
+                    </div>
+                `;
+                productsGrid.appendChild(card);
             });
-        });
-    }
-
-    function updateCartUI() {
-        if (cartItems.length > 0) {
-            if(emptyCartMsg) emptyCartMsg.style.display = 'none'; 
-            cartItemsList.innerHTML = ''; 
-
-            cartItems.forEach(item => {
-                const itemDiv = document.createElement('div');
-                itemDiv.style.display = 'flex';
-                itemDiv.style.justifyContent = 'space-between';
-                itemDiv.style.margin = '10px 0';
-                itemDiv.innerHTML = `<span>${item.name}</span> <span>${item.price} ج.م</span>`;
-                cartItemsList.appendChild(itemDiv);
+            
+            activateCartButtons();
+            activateAdminButtons(); 
+        }
+    
+        // زر فتح / إغلاق لوحة تحكم المالك بالباسورد
+        if(btnToggleAdmin) {
+            btnToggleAdmin.addEventListener('click', () => {
+                const password = prompt("برجاء إدخال كلمة مرور المالك لفتح لوحة التحكم: 🔐");
+                if (password === '1234') { 
+                    let currentDisplay = window.getComputedStyle(adminSection).display;
+                    if (currentDisplay === 'none') {
+                        adminSection.style.display = 'block';
+                        adminSection.scrollIntoView({ behavior: 'smooth' });
+                    } else {
+                        adminSection.style.display = 'none';
+                    }
+                } else if (password !== null) {
+                    alert("عذراً، كلمة المرور خاطئة! هذه الخاصية للمالك فقط. ❌");
+                }
             });
-        } else {
-            if(emptyCartMsg) emptyCartMsg.style.display = 'block';
-            cartItemsList.innerHTML = '';
         }
-
-        if(cartTotalPrice) {
-            cartTotalPrice.textContent = totalPrice;
+    
+        // دالة ضغط الصور المحسنة بتاعتكِ
+        function compressImage(base64Str) {
+            return new Promise((resolve) => {
+                const img = new Image();
+                img.src = base64Str;
+                img.onload = () => {
+                    const canvas = document.createElement('canvas');
+                    let width = img.width;
+                    let height = img.height;
+                    if (width > height) {
+                        if (width > 300) { height *= 300 / width; width = 300; }
+                    } else {
+                        if (height > 300) { width *= 300 / height; height = 300; }
+                    }
+                    canvas.width = width;
+                    canvas.height = height;
+                    const ctx = canvas.getContext('2d');
+                    ctx.drawImage(img, 0, 0, width, height);
+                    resolve(canvas.toDataURL('image/jpeg', 0.5)); 
+                };
+                img.onerror = () => resolve('https://images.unsplash.com/photo-1542838132-92c53300491e?q=80&w=400');
+            });
         }
-    }
-
-    if(shopNowBtn && productsSection) {
-        shopNowBtn.addEventListener('click', (e) => {
-            e.preventDefault();
-            productsSection.scrollIntoView({ behavior: 'smooth' });
-        });
-    }
-
-    if(cartButton && cartModal && closeCartBtn) {
-        cartButton.addEventListener('click', () => {
-            cartModal.style.display = 'block';
-        });
-
-        closeCartBtn.addEventListener('click', () => {
-            cartModal.style.display = 'none';
-        });
-
-        window.addEventListener('click', (e) => {
-            if (e.target == cartModal) {
-                cartModal.style.display = 'none';
+    
+        // زر النشر السحابي السريع إلى Firestore
+        if(btnSubmitProduct) {
+            btnSubmitProduct.addEventListener('click', async () => {
+                const nameInput = document.getElementById('new-product-name').value.trim();
+                const priceInput = parseFloat(document.getElementById('new-product-price').value);
+                const imgInputEle = document.getElementById('new-product-img');
+                const imgFile = imgInputEle.files[0];
+        
+                if(nameInput === '' || isNaN(priceInput)) {
+                    alert('الرجاء إدخال اسم منتج وسعر صحيحين! ⚠️');
+                    return;
+                }
+        
+                const defaultImg = 'https://images.unsplash.com/photo-1542838132-92c53300491e?q=80&w=400';
+                let finalImgData = defaultImg;
+        
+                if (imgFile) {
+                    try {
+                        const fileReaderPromise = new Promise((resolve) => {
+                            const reader = new FileReader();
+                            reader.onloadend = () => resolve(reader.result);
+                            reader.onerror = () => resolve(defaultImg);
+                            reader.readAsDataURL(imgFile);
+                        });
+                        const rawBase64 = await fileReaderPromise;
+                        if(rawBase64 !== defaultImg) finalImgData = await compressImage(rawBase64);
+                    } catch(err) {
+                        finalImgData = defaultImg;
+                    }
+                }
+        
+                try {
+                    // توليد معرف عشوائي فريد للمستند في Firestore
+                    const customId = "prod_" + Date.now();
+                    await setDoc(doc(db, "products", customId), {
+                        name: nameInput,
+                        price: priceInput,
+                        img: finalImgData,
+                        createdAt: new Date()
+                    });
+                    
+                    document.getElementById('new-product-name').value = '';
+                    document.getElementById('new-product-price').value = '';
+                    if(imgInputEle) imgInputEle.value = ''; 
+                    if(adminSection) adminSection.style.display = 'none';
+                    
+                    alert(`تم نشر منتجك الجديد (${nameInput}) في السحاب بنجاح! 🚀`);
+                    loadProductsFromFirestore(); // إعادة تحديث الصفحة فوراً
+                } catch (e) {
+                    console.error("حدث خطأ أثناء الحفظ: ", e);
+                    alert("عفواً، فشل حفظ المنتج في السيرفر.");
+                }
+            });
+        }
+      
+        // ربط أزرار التعديل والحذف المتوافقة مع Firestore
+        function activateAdminButtons() {
+            document.querySelectorAll('.btn-delete-product').forEach(btn => {
+                btn.addEventListener('click', async () => {
+                    const index = btn.getAttribute('data-index');
+                    const product = initialProducts[index];
+                    const password = prompt("برجاء إدخال كلمة مرور المالك لإتمام الحذف: 🔐");
+                    if (password === '1234') { 
+                        if (confirm(`هل أنت متأكد من حذف منتج (${product.name})؟ ⚠️`)) {
+                            try {
+                                await deleteDoc(doc(db, "products", product.id));
+                                alert("تم الحذف من السيرفر بنجاح! 🗑️");
+                                loadProductsFromFirestore(); // تحديث الصفحة تلقائياً
+                            } catch (e) {
+                                alert("خطأ أثناء الحذف من السيرفر.");
+                            }
+                        }
+                    } else if (password !== null) alert("كلمة مرور خاطئة! ❌");
+                });
+            });
+      
+            document.querySelectorAll('.btn-edit-product').forEach(btn => {
+                btn.addEventListener('click', async () => {
+                    const index = btn.getAttribute('data-index');
+                    const product = initialProducts[index];
+                    const password = prompt("برجاء إدخال كلمة مرور المالك لإتمام التعديل: 🔐");
+                    if (password === '1234') {
+                        const newName = prompt("تعديل اسم المنتج:", product.name);
+                        if (newName === null || newName.trim() === "") return;
+                        const newPriceInput = prompt("تعديل سعر المنتج:", product.price);
+                        if (newPriceInput === null) return;
+                        const newPrice = parseFloat(newPriceInput);
+                        if (isNaN(newPrice)) { alert("الرجاء إدخال سعر صحيح! ⚠️"); return; }
+      
+                        try {
+                            await setDoc(doc(db, "products", product.id), {
+                                name: newName.trim(),
+                                price: newPrice,
+                                img: product.img,
+                                createdAt: product.createdAt || new Date()
+                            });
+                            alert("تم تعديل البيانات سحابياً بنجاح! ✨");
+                            loadProductsFromFirestore(); // تحديث الصفحة تلقائياً
+                        } catch (e) {
+                            alert("حدث خطأ أثناء التعديل.");
+                        }
+                    } else if (password !== null) alert("كلمة مرور خاطئة! ❌");
+                });
+            });
+        }
+      
+        // ربط أزرار السلة اللحظية
+        function activateCartButtons() {
+            document.querySelectorAll('.btn-add-cart').forEach(button => {
+                const newBtn = button.cloneNode(true);
+                button.parentNode.replaceChild(newBtn, button);
+                newBtn.addEventListener('click', () => {
+                    const name = newBtn.getAttribute('data-name');
+                    const price = parseFloat(newBtn.getAttribute('data-price'));
+                    cartCount++;
+                    if(countSpan) countSpan.textContent = cartCount;
+                    cartItems.push({ name, price });
+                    totalPrice += price;
+                    updateCartUI();
+                    alert(`تم إضافة ${name} إلى سلة التسوق بنجاح! 🛒`);
+                });
+            });
+        }
+      
+        function updateCartUI() {
+            if (!cartItemsList) return;
+            if (cartItems.length > 0) {
+                if(emptyCartMsg) emptyCartMsg.style.display = 'none'; 
+                cartItemsList.innerHTML = ''; 
+                cartItems.forEach(item => {
+                    const itemDiv = document.createElement('div');
+                    itemDiv.style.display = 'flex';
+                    itemDiv.style.justifyContent = 'space-between';
+                    itemDiv.style.margin = '10px 0';
+                    itemDiv.innerHTML = `<span>${item.name}</span> <span>${item.price} ج.م</span>`;
+                    cartItemsList.appendChild(itemDiv);
+                });
+            } else {
+                if(emptyCartMsg) emptyCartMsg.style.display = 'block';
+                cartItemsList.innerHTML = '';
             }
-        });
-    }
-
-    renderProducts();
-</script>
+            if(cartTotalPrice) cartTotalPrice.textContent = totalPrice;
+        }
+      
+        if(shopNowBtn && productsSection) {
+            shopNowBtn.addEventListener('click', (e) => {
+                e.preventDefault();
+                productsSection.scrollIntoView({ behavior: 'smooth' });
+            });
+        }
+      
+        if(cartButton && cartModal && closeCartBtn) {
+            cartButton.addEventListener('click', () => cartModal.style.display = 'block');
+            closeCartBtn.addEventListener('click', () => cartModal.style.display = 'none');
+            window.addEventListener('click', (e) => { if (e.target == cartModal) cartModal.style.display = 'none'; });
+        }
+    
+        // تشغيل جلب المنتجات تلقائياً أول ما المتجر يفتح
+        loadProductsFromFirestore();
+    </script>
 </body>
 </html>

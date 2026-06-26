@@ -493,7 +493,14 @@
                     <div class="product-info">
                         <h3>${product.name}</h3>
                         <p class="price">${product.price} ج.م</p>
-                        <button class="btn-add-cart" data-name="${product.name}" data-price="${product.price}">اضافه للسلة</button>
+                        
+                        <div style="display: flex; justify-content: center; align-items: center; gap: 10px; margin-bottom: 12px;">
+                            <button class="btn-minus" data-id="${product.id}" style="padding: 2px 8px; font-weight: bold; cursor: pointer; background: #e74c3c; color: white; border: none; border-radius: 3px;">-</button>
+                            <span id="qty-${product.id}" style="font-weight: bold; font-size: 16px;">1</span>
+                            <button class="btn-plus" data-id="${product.id}" style="padding: 2px 8px; font-weight: bold; cursor: pointer; background: #2ecc71; color: white; border: none; border-radius: 3px;">+</button>
+                        </div>
+
+                        <button class="btn-add-cart" data-id="${product.id}" data-name="${product.name}" data-price="${product.price}">اضافه للسلة</button>
                         <div class="product-actions">
                             <button class="btn-edit-product" data-index="${index}">📝 تعديل</button>
                             <button class="btn-delete-product" data-index="${index}">🗑️ مسح</button>
@@ -503,6 +510,7 @@
                 productsGrid.appendChild(card);
             });
             
+            activateQtyButtons(); // تشغيل أزرار الـ + والـ -
             activateCartButtons();
             activateAdminButtons(); 
         }
@@ -655,42 +663,125 @@
             });
         }
       
-        // ربط أزرار السلة اللحظية
+   // دالة تشغيل عداد الكمية لكل منتج في الصفحة
+   function activateQtyButtons() {
+            document.querySelectorAll('.btn-plus').forEach(button => {
+                button.addEventListener('click', () => {
+                    const id = button.getAttribute('data-id');
+                    const qtySpan = document.getElementById(`qty-${id}`);
+                    let currentQty = parseInt(qtySpan.textContent);
+                    qtySpan.textContent = currentQty + 1;
+                });
+            });
+
+            document.querySelectorAll('.btn-minus').forEach(button => {
+                button.addEventListener('click', () => {
+                    const id = button.getAttribute('data-id');
+                    const qtySpan = document.getElementById(`qty-${id}`);
+                    let currentQty = parseInt(qtySpan.textContent);
+                    if (currentQty > 1) { // نمنع نزول الكمية عن 1
+                        qtySpan.textContent = currentQty - 1;
+                    }
+                });
+            });
+        }
+      
+        // دالة إضافة المنتج للسلة بالكمية المحددة
         function activateCartButtons() {
             document.querySelectorAll('.btn-add-cart').forEach(button => {
                 const newBtn = button.cloneNode(true);
                 button.parentNode.replaceChild(newBtn, button);
                 newBtn.addEventListener('click', () => {
+                    const id = newBtn.getAttribute('data-id');
                     const name = newBtn.getAttribute('data-name');
                     const price = parseFloat(newBtn.getAttribute('data-price'));
-                    cartCount++;
+                    
+                    // جلب الكمية المكتوبة في العداد حالياً
+                    const qtySpan = document.getElementById(`qty-${id}`);
+                    const chosenQty = qtySpan ? parseInt(qtySpan.textContent) : 1;
+
+                    // تحديث عداد كلي للسلة بعدد القطع الجديدة
+                    cartCount += chosenQty;
                     if(countSpan) countSpan.textContent = cartCount;
-                    cartItems.push({ name, price });
-                    totalPrice += price;
+                    
+                    // التحقق لو الصنف موجود مسبقاً في السلة عشان نزود كميته بدل ما يتكرر سطر جديد
+                    const existingItem = cartItems.find(item => item.name === name);
+                    if (existingItem) {
+                        existingItem.qty += chosenQty;
+                    } else {
+                        cartItems.push({ name, price, qty: chosenQty });
+                    }
+
+                    // حساب إجمالي السعر الكلي
+                    totalPrice += (price * chosenQty);
                     updateCartUI();
-                    alert(`تم إضافة ${name} إلى سلة التسوق بنجاح! 🛒`);
+                    
+                    // إعادة تصغير العداد لـ 1 بعد الإضافة بنجاح
+                    if(qtySpan) qtySpan.textContent = 1;
+
+                    alert(`تم إضافة ${chosenQty} من (${name}) إلى سلة التسوق بنجاح! 🛒`);
+                });
+            });
+        }
+      // دالة تشغيل عداد الكمية لكل منتج في الصفحة
+      function activateQtyButtons() {
+            document.querySelectorAll('.btn-plus').forEach(button => {
+                button.addEventListener('click', () => {
+                    const id = button.getAttribute('data-id');
+                    const qtySpan = document.getElementById(`qty-${id}`);
+                    let currentQty = parseInt(qtySpan.textContent);
+                    qtySpan.textContent = currentQty + 1;
+                });
+            });
+
+            document.querySelectorAll('.btn-minus').forEach(button => {
+                button.addEventListener('click', () => {
+                    const id = button.getAttribute('data-id');
+                    const qtySpan = document.getElementById(`qty-${id}`);
+                    let currentQty = parseInt(qtySpan.textContent);
+                    if (currentQty > 1) { // نمنع نزول الكمية عن 1
+                        qtySpan.textContent = currentQty - 1;
+                    }
                 });
             });
         }
       
-        function updateCartUI() {
-            if (!cartItemsList) return;
-            if (cartItems.length > 0) {
-                if(emptyCartMsg) emptyCartMsg.style.display = 'none'; 
-                cartItemsList.innerHTML = ''; 
-                cartItems.forEach(item => {
-                    const itemDiv = document.createElement('div');
-                    itemDiv.style.display = 'flex';
-                    itemDiv.style.justifyContent = 'space-between';
-                    itemDiv.style.margin = '10px 0';
-                    itemDiv.innerHTML = `<span>${item.name}</span> <span>${item.price} ج.م</span>`;
-                    cartItemsList.appendChild(itemDiv);
+        // دالة إضافة المنتج للسلة بالكمية المحددة
+        function activateCartButtons() {
+            document.querySelectorAll('.btn-add-cart').forEach(button => {
+                const newBtn = button.cloneNode(true);
+                button.parentNode.replaceChild(newBtn, button);
+                newBtn.addEventListener('click', () => {
+                    const id = newBtn.getAttribute('data-id');
+                    const name = newBtn.getAttribute('data-name');
+                    const price = parseFloat(newBtn.getAttribute('data-price'));
+                    
+                    // جلب الكمية المكتوبة في العداد حالياً
+                    const qtySpan = document.getElementById(`qty-${id}`);
+                    const chosenQty = qtySpan ? parseInt(qtySpan.textContent) : 1;
+
+                    // تحديث عداد كلي للسلة بعدد القطع الجديدة
+                    cartCount += chosenQty;
+                    if(countSpan) countSpan.textContent = cartCount;
+                    
+                    // التحقق لو الصنف موجود مسبقاً في السلة عشان نزود كميته بدل ما يتكرر سطر جديد
+                    const existingItem = cartItems.find(item => item.name === name);
+                    if (existingItem) {
+                        existingItem.qty += chosenQty;
+                    } else {
+                        cartItems.push({ name, price, qty: chosenQty });
+                    }
+
+                    // حساب إجمالي السعر الكلي
+                    totalPrice += (price * chosenQty);
+                    updateCartUI();
+                    
+                    // إعادة تصغير العداد لـ 1 بعد الإضافة بنجاح
+                    if(qtySpan) qtySpan.textContent = 1;
+
+                    alert(`تم إضافة ${chosenQty} من (${name}) إلى سلة التسوق بنجاح! 🛒`);
                 });
-            } else {
-                if(emptyCartMsg) emptyCartMsg.style.display = 'block';
-                cartItemsList.innerHTML = '';
-            }
-            if(cartTotalPrice) cartTotalPrice.textContent = totalPrice;
+            });
         }
       
         if(shopNowBtn && productsSection) {

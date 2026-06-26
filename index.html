@@ -483,6 +483,8 @@
             productsGrid.innerHTML = ''; 
             
             initialProducts.forEach((product, index) => {
+                const stockQty = product.stock !== undefined ? product.stock : 10;
+
                 const card = document.createElement('div');
                 card.className = 'product-card';
                 card.innerHTML = `
@@ -498,9 +500,21 @@
                         <h3>${product.name}</h3>
                         <p class="price">${product.price} ج.م</p>
                         
-                        <div style="display: flex; justify-content: center; align-items: center; gap: 10px; margin-bottom: 12px;">
+                        <div style="font-size: 13px; color: #e67e22; font-weight: bold; margin-bottom: 8px; text-align: center; background: #fff3e0; padding: 4px; border-radius: 4px;">
+                            📋 المتاح كلياً بالمتجر: <span id="total-stock-label-${product.id}">${stockQty}</span> قطع
+                        </div>
+
+                        <div style="display: flex; justify-content: center; align-items: center; gap: 8px; margin-bottom: 8px; background: #f1f2f6; padding: 4px; border-radius: 5px;">
+                            <span style="font-size: 12px; color: #555; font-weight: bold;">📦 المتاح:</span>
+                            <button class="btn-stock-minus" data-id="${product.id}" style="padding: 1px 6px; font-weight: bold; cursor: pointer; background: #7f8c8d; color: white; border: none; border-radius: 3px;">-</button>
+                            <span id="stock-${product.id}" style="font-weight: bold; font-size: 14px; color: #2c3e50;">${stockQty}</span>
+                            <button class="btn-stock-plus" data-id="${product.id}" style="padding: 1px 6px; font-weight: bold; cursor: pointer; background: #7f8c8d; color: white; border: none; border-radius: 3px;">+</button>
+                        </div>
+
+                        <div style="display: flex; justify-content: center; align-items: center; gap: 8px; margin-bottom: 12px;">
+                            <span style="font-size: 12px; color: #555; font-weight: bold;">🛒 الطلب:</span>
                             <button class="btn-minus" data-id="${product.id}" style="padding: 2px 8px; font-weight: bold; cursor: pointer; background: #e74c3c; color: white; border: none; border-radius: 3px;">-</button>
-                            <span id="qty-${product.id}" style="font-weight: bold; font-size: 16px;">1</span>
+                            <span id="qty-${product.id}" style="font-weight: bold; font-size: 16px;">0</span>
                             <button class="btn-plus" data-id="${product.id}" style="padding: 2px 8px; font-weight: bold; cursor: pointer; background: #2ecc71; color: white; border: none; border-radius: 3px;">+</button>
                         </div>
 
@@ -510,9 +524,10 @@
                 productsGrid.appendChild(card);
             });
             
-            activateQtyButtons(); // تشغيل العداد المحمي للمالك فقط
-            activateCartButtons(); // تشغيل السلة
-            activateAdminButtons(); // تشغيل زراير التحكم العلوية
+            activateOwnerStockButtons(); 
+            activateCustomerQtyButtons(); 
+            activateCartButtons(); 
+            activateAdminButtons(); 
         }
     
         // زر فتح / إغلاق لوحة تحكم المالك بالباسورد
@@ -557,71 +572,140 @@
             });
         }
 
-        // دالة حماية أزرار الـ + والـ - بكلمة مرور للمالك فقط
-        function verifyOwnerAction() {
-            const password = prompt("تعديل كمية هذا الصنف متاح للمالك فقط. يرجى إدخال كلمة المرور: 🔐");
-            return password === '1234';
+        // تشغيل عداد المخزن (خاص بالمالك بالباسورد وسحابي)
+        function activateOwnerStockButtons() {
+            document.querySelectorAll('.btn-stock-plus').forEach(button => {
+                button.addEventListener('click', async () => {
+                    const password = prompt("تعديل كمية مخزن المتجر متاح للمالك فقط. يرجى إدخال كلمة المرور: 🔐");
+                    if (password === '1234') {
+                        const id = button.getAttribute('data-id');
+                        const stockSpan = document.getElementById(`stock-${id}`);
+                        const totalStockLabel = document.getElementById(`total-stock-label-${id}`);
+                        let currentStock = parseInt(stockSpan.textContent);
+                        let newStock = currentStock + 1;
+                        
+                        const prodRef = doc(db, "products", id);
+                        const productObj = initialProducts.find(p => p.id === id);
+                        if (productObj) {
+                            productObj.stock = newStock;
+                            await setDoc(prodRef, productObj);
+                            stockSpan.textContent = newStock;
+                            if(totalStockLabel) totalStockLabel.textContent = newStock;
+                        }
+                    } else if(password !== null) { alert("كلمة مرور خاطئة! ❌"); }
+                });
+            });
+
+            document.querySelectorAll('.btn-stock-minus').forEach(button => {
+                button.addEventListener('click', async () => {
+                    const password = prompt("تعديل كمية مخزن المتجر متاح للمالك فقط. يرجى إدخال كلمة المرور: 🔐");
+                    if (password === '1234') {
+                        const id = button.getAttribute('data-id');
+                        const stockSpan = document.getElementById(`stock-${id}`);
+                        const totalStockLabel = document.getElementById(`total-stock-label-${id}`);
+                        let currentStock = parseInt(stockSpan.textContent);
+                        if (currentStock > 0) {
+                            let newStock = currentStock - 1;
+                            const prodRef = doc(db, "products", id);
+                            const productObj = initialProducts.find(p => p.id === id);
+                            if (productObj) {
+                                productObj.stock = newStock;
+                                await setDoc(prodRef, productObj);
+                                stockSpan.textContent = newStock;
+                                if(totalStockLabel) totalStockLabel.textContent = newStock;
+                            }
+                        }
+                    } else if(password !== null) { alert("كلمة مرور خاطئة! ❌"); }
+                });
+            });
         }
 
-        function activateQtyButtons() {
+        // تشغيل عداد الزبائن للطلب (يسمح بالنزول حتى 0)
+        function activateCustomerQtyButtons() {
             document.querySelectorAll('.btn-plus').forEach(button => {
                 button.addEventListener('click', () => {
-                    if (verifyOwnerAction()) {
-                        const id = button.getAttribute('data-id');
-                        const qtySpan = document.getElementById(`qty-${id}`);
-                        let currentQty = parseInt(qtySpan.textContent);
-                        qtySpan.textContent = currentQty + 1;
-                    } else {
-                        alert("كلمة مرور خاطئة أو تم إلغاء العملية! التعديل للمالك فقط. ❌");
-                    }
+                    const id = button.getAttribute('data-id');
+                    const qtySpan = document.getElementById(`qty-${id}`);
+                    let currentQty = parseInt(qtySpan.textContent);
+                    qtySpan.textContent = currentQty + 1;
                 });
             });
 
             document.querySelectorAll('.btn-minus').forEach(button => {
                 button.addEventListener('click', () => {
-                    if (verifyOwnerAction()) {
-                        const id = button.getAttribute('data-id');
-                        const qtySpan = document.getElementById(`qty-${id}`);
-                        let currentQty = parseInt(qtySpan.textContent);
-                        if (currentQty > 1) {
-                            qtySpan.textContent = currentQty - 1;
-                        }
-                    } else {
-                        alert("كلمة مرور خاطئة أو تم إلغاء العملية! التعديل للمالك فقط. ❌");
+                    const id = button.getAttribute('data-id');
+                    const qtySpan = document.getElementById(`qty-${id}`);
+                    let currentQty = parseInt(qtySpan.textContent);
+                    if (currentQty > 0) {
+                        qtySpan.textContent = currentQty - 1;
                     }
                 });
             });
         }
       
-        // دالة إضافة المنتج للسلة بالكمية المحددة
+        // دالة إضافة المنتج للسلة مع فحص الكمية المتاحة وتحديث قاعدة البيانات فوراً
         function activateCartButtons() {
             document.querySelectorAll('.btn-add-cart').forEach(button => {
                 const newBtn = button.cloneNode(true);
                 button.parentNode.replaceChild(newBtn, button);
-                newBtn.addEventListener('click', () => {
+                newBtn.addEventListener('click', async () => {
                     const id = newBtn.getAttribute('data-id');
                     const name = newBtn.getAttribute('data-name');
                     const price = parseFloat(newBtn.getAttribute('data-price'));
                     
                     const qtySpan = document.getElementById(`qty-${id}`);
-                    const chosenQty = qtySpan ? parseInt(qtySpan.textContent) : 1;
+                    const chosenQty = qtySpan ? parseInt(qtySpan.textContent) : 0;
 
-                    cartCount += chosenQty;
-                    if(countSpan) countSpan.textContent = cartCount;
-                    
-                    const existingItem = cartItems.find(item => item.name === name);
-                    if (existingItem) {
-                        existingItem.qty += chosenQty;
-                    } else {
-                        cartItems.push({ name, price, qty: chosenQty });
+                    if(chosenQty <= 0) {
+                        alert("يرجى تحديد كمية أكبر من صفر أولاً لشراء الصنف! ⚠️");
+                        return;
                     }
 
-                    totalPrice += (price * chosenQty);
-                    updateCartUI();
-                    
-                    if(qtySpan) qtySpan.textContent = 1;
+                    // البحث عن المنتج الأصلي لمعرفة كمية المخزن الحالية في الكود
+                    const productObj = initialProducts.find(p => p.id === id);
+                    const currentStock = productObj && productObj.stock !== undefined ? productObj.stock : 10;
 
-                    alert(`تم إضافة ${chosenQty} من (${name}) إلى سلة التسوق بنجاح! 🛒`);
+                    // 🔒 شرط الحماية الحاسم: التأكد أن طلب الزبون لا يتخطى المخزن المتاح
+                    if(chosenQty > currentStock) {
+                        alert(`عذراً! الكمية المطلوبة (${chosenQty}) غير متوفرة. المتاح في المتجر حالياً هو (${currentStock}) قطع فقط. ⚠️`);
+                        return;
+                    }
+
+                    // إذا مر من الشرط، نقوم بخصم الكمية من المخزن فوراً سحابياً ومحلياً
+                    const newStock = currentStock - chosenQty;
+                    productObj.stock = newStock;
+                    
+                    try {
+                        const prodRef = doc(db, "products", id);
+                        await setDoc(prodRef, productObj); // تحديث الفايربيز بالكمية الجديدة بعد الخصم
+                        
+                        // تحديث الأرقام المعروضة أمام المالك والزبون على الشاشة فوراً
+                        const stockSpan = document.getElementById(`stock-${id}`);
+                        const totalStockLabel = document.getElementById(`total-stock-label-${id}`);
+                        if(stockSpan) stockSpan.textContent = newStock;
+                        if(totalStockLabel) totalStockLabel.textContent = newStock;
+
+                        // إضافة الصنف لبيانات سلة التسوق
+                        cartCount += chosenQty;
+                        if(countSpan) countSpan.textContent = cartCount;
+                        
+                        const existingItem = cartItems.find(item => item.name === name);
+                        if (existingItem) {
+                            existingItem.qty += chosenQty;
+                        } else {
+                            cartItems.push({ name, price, qty: chosenQty });
+                        }
+
+                        totalPrice += (price * chosenQty);
+                        updateCartUI();
+                        
+                        if(qtySpan) qtySpan.textContent = 0; // إعادة تصفير عداد الطلب للزبون بعد الإضافة
+
+                        alert(`تم إضافة ${chosenQty} من (${name}) إلى سلة التسوق بنجاح! 🛒`);
+                    } catch(err) {
+                        console.error(err);
+                        alert("فشل تحديث المخزن في السيرفر، يرجى المحاولة لاحقاً.");
+                    }
                 });
             });
         }
@@ -631,6 +715,10 @@
             btnSubmitProduct.addEventListener('click', async () => {
                 const nameInput = document.getElementById('new-product-name').value.trim();
                 const priceInput = parseFloat(document.getElementById('new-product-price').value);
+                
+                const stockInputEle = document.getElementById('new-product-stock');
+                const stockInput = stockInputEle ? parseInt(stockInputEle.value) : 10;
+                
                 const imgInputEle = document.getElementById('new-product-img');
                 const imgFile = imgInputEle.files[0];
         
@@ -662,16 +750,18 @@
                     await setDoc(doc(db, "products", customId), {
                         name: nameInput,
                         price: priceInput,
+                        stock: isNaN(stockInput) ? 10 : stockInput,
                         img: finalImgData,
                         createdAt: new Date()
                     });
                     
                     document.getElementById('new-product-name').value = '';
                     document.getElementById('new-product-price').value = '';
+                    if(stockInputEle) stockInputEle.value = '';
                     if(imgInputEle) imgInputEle.value = ''; 
                     if(adminSection) adminSection.style.display = 'none';
                     
-                    alert(`تم نشر منتجك الجديد (${nameInput}) في السحاب بنجاح! 🚀`);
+                    alert(`تم نشر منتجك الجديد (${nameInput}) بنجاح! 🚀`);
                     loadProductsFromFirestore();
                 } catch (e) {
                     console.error("حدث خطأ أثناء الحفظ: ", e);
@@ -718,6 +808,7 @@
                             await setDoc(doc(db, "products", product.id), {
                                 name: newName.trim(),
                                 price: newPrice,
+                                stock: product.stock !== undefined ? product.stock : 10,
                                 img: product.img,
                                 createdAt: product.createdAt || new Date()
                             });
@@ -744,11 +835,47 @@
                     itemDiv.innerHTML = `<span>${item.name} <b style="color:#e67e22;">(x${item.qty})</b></span> <span>${item.price * item.qty} ج.م</span>`;
                     cartItemsList.appendChild(itemDiv);
                 });
+
+                let btnWhatsApp = document.getElementById('btn-send-whatsapp');
+                if(!btnWhatsApp) {
+                    btnWhatsApp = document.createElement('button');
+                    btnWhatsApp.id = 'btn-send-whatsapp';
+                    btnWhatsApp.textContent = 'تأكيد الطلب عبر الواتساب 💬';
+                    btnWhatsApp.style.cssText = "width: 100%; padding: 12px; background: #25d366; color: white; border: none; border-radius: 5px; font-size: 16px; font-weight: bold; cursor: pointer; margin-top: 15px;";
+                    cartModal.querySelector('.modal-content').appendChild(btnWhatsApp);
+                    
+                    btnWhatsApp.addEventListener('click', sendOrderToWhatsApp);
+                }
             } else {
                 if(emptyCartMsg) emptyCartMsg.style.display = 'block';
                 cartItemsList.innerHTML = '';
+                const btnWhatsApp = document.getElementById('btn-send-whatsapp');
+                if(btnWhatsApp) btnWhatsApp.remove();
             }
             if(cartTotalPrice) cartTotalPrice.textContent = totalPrice;
+        }
+
+        function sendOrderToWhatsApp() {
+            if(cartItems.length === 0) return;
+
+            // ⚠️ غيري الرقم للتالي ليكون رقمكِ الفعلي بالصيغة الدولية
+            const myPhoneNumber = "201000000000"; 
+
+            let messageText = "السلام عليكم ورحمة الله وبركاته، أريد طلب المنتجات التالية من المتجر: 🛒\n\n";
+            
+            cartItems.forEach((item, index) => {
+                messageText += `${index + 1}️⃣ *${item.name}*\n`;
+                messageText += `   الكمية: ${item.qty} قطعة\n`;
+                messageText += `   السعر الكلي: ${item.price * item.qty} ج.م\n\n`;
+            });
+
+            messageText += `-------------------------\n`;
+            messageText += `💰 *إجمالي الحساب الكلي:* ${totalPrice} ج.م\n`;
+            messageText += `برجاء تأكيد الطلب وتجهيزه الشحن الإلكتروني 🚀`;
+
+            const encodedMessage = encodeURIComponent(messageText);
+            const whatsappUrl = `https://api.whatsapp.com/send?phone=${myPhoneNumber}&text=${encodedMessage}`;
+            window.open(whatsappUrl, '_blank');
         }
       
         if(shopNowBtn && productsSection) {

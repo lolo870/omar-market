@@ -413,7 +413,7 @@
     </div>
    
     
-    <script type="module">
+   <script type="module">
         // 1. استدعاء مكتبات جوجل لـ Firestore من الإنترنت مباشرة
         import { initializeApp } from "https://www.gstatic.com/firebasejs/12.15.0/firebase-app.js";
         import { getFirestore, collection, doc, setDoc, getDocs, deleteDoc } from "https://www.gstatic.com/firebasejs/12.15.0/firebase-firestore.js";
@@ -486,10 +486,15 @@
                 const card = document.createElement('div');
                 card.className = 'product-card';
                 card.innerHTML = `
+                    <div class="product-actions" style="display: flex; justify-content: space-between; padding: 8px; background: #f9f9f9; border-bottom: 1px solid #eee;">
+                        <button class="btn-edit-product" data-index="${index}" style="cursor:pointer; background:none; border:none; color:#2980b9; font-weight:bold;">📝 تعديل</button>
+                        <button class="btn-delete-product" data-index="${index}" style="cursor:pointer; background:none; border:none; color:#c0392b; font-weight:bold;">🗑️ مسح</button>
+                    </div>
+
                     <div class="product-img">
                         <img src="${product.img}" alt="${product.name}" onerror="this.src='https://images.unsplash.com/photo-1542838132-92c53300491e?q=80&w=400'">
                     </div>
-                    <div class="product-info">
+                    <div class="product-info" style="padding-top: 5px;">
                         <h3>${product.name}</h3>
                         <p class="price">${product.price} ج.م</p>
                         
@@ -500,18 +505,14 @@
                         </div>
 
                         <button class="btn-add-cart" data-id="${product.id}" data-name="${product.name}" data-price="${product.price}">اضافه للسلة</button>
-                        <div class="product-actions">
-                            <button class="btn-edit-product" data-index="${index}">📝 تعديل</button>
-                            <button class="btn-delete-product" data-index="${index}">🗑️ مسح</button>
-                        </div>
                     </div>
                 `;
                 productsGrid.appendChild(card);
             });
             
-            activateQtyButtons(); // تشغيل أزرار الـ + والـ -
-            activateCartButtons(); // تشغيل أزرار السلة النظيفة
-            activateAdminButtons(); 
+            activateQtyButtons(); // تشغيل العداد المحمي للمالك فقط
+            activateCartButtons(); // تشغيل السلة
+            activateAdminButtons(); // تشغيل زراير التحكم العلوية
         }
     
         // زر فتح / إغلاق لوحة تحكم المالك بالباسورد
@@ -556,30 +557,43 @@
             });
         }
 
-        // دالة تشغيل عداد الكمية لكل منتج في الصفحة
+        // دالة حماية أزرار الـ + والـ - بكلمة مرور للمالك فقط
+        function verifyOwnerAction() {
+            const password = prompt("تعديل كمية هذا الصنف متاح للمالك فقط. يرجى إدخال كلمة المرور: 🔐");
+            return password === '1234';
+        }
+
         function activateQtyButtons() {
             document.querySelectorAll('.btn-plus').forEach(button => {
                 button.addEventListener('click', () => {
-                    const id = button.getAttribute('data-id');
-                    const qtySpan = document.getElementById(`qty-${id}`);
-                    let currentQty = parseInt(qtySpan.textContent);
-                    qtySpan.textContent = currentQty + 1;
+                    if (verifyOwnerAction()) {
+                        const id = button.getAttribute('data-id');
+                        const qtySpan = document.getElementById(`qty-${id}`);
+                        let currentQty = parseInt(qtySpan.textContent);
+                        qtySpan.textContent = currentQty + 1;
+                    } else {
+                        alert("كلمة مرور خاطئة أو تم إلغاء العملية! التعديل للمالك فقط. ❌");
+                    }
                 });
             });
 
             document.querySelectorAll('.btn-minus').forEach(button => {
                 button.addEventListener('click', () => {
-                    const id = button.getAttribute('data-id');
-                    const qtySpan = document.getElementById(`qty-${id}`);
-                    let currentQty = parseInt(qtySpan.textContent);
-                    if (currentQty > 1) {
-                        qtySpan.textContent = currentQty - 1;
+                    if (verifyOwnerAction()) {
+                        const id = button.getAttribute('data-id');
+                        const qtySpan = document.getElementById(`qty-${id}`);
+                        let currentQty = parseInt(qtySpan.textContent);
+                        if (currentQty > 1) {
+                            qtySpan.textContent = currentQty - 1;
+                        }
+                    } else {
+                        alert("كلمة مرور خاطئة أو تم إلغاء العملية! التعديل للمالك فقط. ❌");
                     }
                 });
             });
         }
       
-        // دالة إضافة المنتج للسلة بالكمية المحددة (تمت إزالة أي تكرار لها)
+        // دالة إضافة المنتج للسلة بالكمية المحددة
         function activateCartButtons() {
             document.querySelectorAll('.btn-add-cart').forEach(button => {
                 const newBtn = button.cloneNode(true);

@@ -724,27 +724,7 @@
             });
         }
       // دالة تشغيل عداد الكمية لكل منتج في الصفحة
-      function activateQtyButtons() {
-            document.querySelectorAll('.btn-plus').forEach(button => {
-                button.addEventListener('click', () => {
-                    const id = button.getAttribute('data-id');
-                    const qtySpan = document.getElementById(`qty-${id}`);
-                    let currentQty = parseInt(qtySpan.textContent);
-                    qtySpan.textContent = currentQty + 1;
-                });
-            });
-
-            document.querySelectorAll('.btn-minus').forEach(button => {
-                button.addEventListener('click', () => {
-                    const id = button.getAttribute('data-id');
-                    const qtySpan = document.getElementById(`qty-${id}`);
-                    let currentQty = parseInt(qtySpan.textContent);
-                    if (currentQty > 1) { // نمنع نزول الكمية عن 1
-                        qtySpan.textContent = currentQty - 1;
-                    }
-                });
-            });
-        }
+     
       
         // دالة إضافة المنتج للسلة بالكمية المحددة
         function activateCartButtons() {
